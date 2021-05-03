@@ -1,0 +1,51 @@
+---
+# tasks file for kubernetes_slave
+- name: configuring yum for slave node
+  yum_repository:
+    name: kube
+    description: Kubernetes repo
+    baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-$basearch
+    enabled: 1
+    gpgcheck: 1
+    gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+
+- name: installing required services:docker,kubeadm,iproute-tc
+  package:
+    name:
+      - docker
+      - kubeadm
+      - iproute-tc
+    state: present
+
+- name: Starting the services
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  loop: "{{ service_names }}"
+
+- name: updating cgroup of docker 
+  copy:
+    dest: /etc/docker/daemon.json
+    src: daemon.json
+
+- name: Restarting docker
+  service:
+    name: docker
+    state: restarted
+
+- name: Updating kubernetes configuration file
+  copy:
+    dest: /etc/sysctl.d/k8s.conf
+    content: |
+      net.bridge.bridge-nf-call-ip6tables = 1
+      net.bridge.bridge-nf-call-iptables = 1
+
+- name: Restarting systemctl in slave node
+  command: sysctl --system
+
+- name: Joining master
+  command: "{{ hostvars[groups['kubernetes_master'][0]]['token']['stdout'] }}"
+
+- name: Cleaning ram
+  shell: echo 3 > /proc/sys/vm/drop_caches

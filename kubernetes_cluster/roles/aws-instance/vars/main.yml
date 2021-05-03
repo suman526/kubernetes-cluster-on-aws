@@ -1,0 +1,14 @@
+---
+# vars file for aws-instance
+instance_tag:
+        - kubernetes-master
+        - kubernetes-slave1
+        - kubernetes-slave2
+
+reg_name: ap-south-1
+subnet: subnet-2dfcf545
+ami_id: ami-045e6fa7127ab1ac4
+key_pair: mykey
+instance_type: t2.micro
+security_group: sg-159e3472
+

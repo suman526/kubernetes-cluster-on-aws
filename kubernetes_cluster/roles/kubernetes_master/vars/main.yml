@@ -1,0 +1,5 @@
+---
+# vars file for kubernetes_master
+service_names:
+  - "docker"
+  - "kubelet"

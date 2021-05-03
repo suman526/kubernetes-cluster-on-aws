@@ -1,0 +1,49 @@
+---
+# tasks file for aws-instance
+- name:  EC2-INSTANCE IS LAUNCHING 
+  ec2:
+    key_name: "{{ key_pair }}"
+    instance_type: "{{ instance_type }}"
+    image: "{{ ami_id }}"
+    wait: true
+    group_id: "{{ security_group }}"
+    count: 1
+    vpc_subnet_id: "{{ subnet }}"
+    assign_public_ip: yes
+    region: "{{ reg_name }}"
+    state: present
+    instance_tags:
+      Name: "{{ item }}"
+    aws_access_key: "{{ access_key }}"
+    aws_secret_key: "{{ secret_key }}"
+  register: instance_launch
+  loop: "{{ instance_tag }}"
+
+- name: Adding kubernetes master instance to host group 
+  add_host:
+    hostname: "{{ instance_launch.results[0].instances[0].public_ip }}"
+    groupname: kubernetes_master
+
+- name: Adding kubernetes master slave1 to host group
+  add_host:
+    hostname: "{{ instance_launch.results[1].instances[0].public_ip }}"
+    groupname: kubernetes_slave
+
+- name: Adding kubernetes master slave2 to host group
+  add_host:
+    hostname: "{{ instance_launch.results[2].instances[0].public_ip }}"
+    groupname: kubernetes_slave
+
+
+- name: Wait for SSH to come up
+  wait_for:
+    host: "{{ instance_launch.results[1].instances[0].public_dns_name }}"
+    port: 22
+    state: started
+
+- name: Wait for SSH to come up
+  wait_for:
+    host: "{{ instance_launch.results[2].instances[0].public_dns_name }}"
+    port: 22
+    state: started
+

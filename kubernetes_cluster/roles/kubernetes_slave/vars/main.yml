@@ -1,0 +1,5 @@
+---
+# vars file for kubernetes_slave
+service_names:
+  - "docker"
+  - "kubelet"
